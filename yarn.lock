@@ -1003,6 +1003,7 @@
     "jest-resolve" "^26.1.0"
     "jest-util" "^26.1.0"
     "jest-worker" "^26.1.0"
+    "node-notifier" "^7.0.0"
     "slash" "^3.0.0"
     "source-map" "^0.6.0"
     "string-length" "^4.0.1"
@@ -2139,6 +2140,7 @@
     "estraverse" "^5.2.0"
     "esutils" "^2.0.2"
     "optionator" "^0.8.1"
+    "source-map" "~0.6.1"
   optionalDependencies:
     "source-map" "~0.6.1"
 
@@ -2996,6 +2998,7 @@
     "@types/graceful-fs" "^4.1.2"
     "anymatch" "^3.0.3"
     "fb-watchman" "^2.0.0"
+    "fsevents" "^2.1.2"
     "graceful-fs" "^4.2.4"
     "jest-serializer" "^26.1.0"
     "jest-util" "^26.1.0"
