@@ -25,23 +25,49 @@ export default class NewBill {
     formData.append('file', file)
     formData.append('email', email)
 
-    this.store
+    //on vérifie de le message d'erreur n'existe pas déjà, sinon on le supprime
+    const messageError = this.document.querySelector('#errorFile');
+    messageError === null || messageError === undefined & messageError.remove();
+    
+    const extensionImg = fileName.split('.')[1].toLowerCase();
+    const authorizedExtension = ['jpg', 'jpeg', 'png'];
+    
+    if ( authorizedExtension.find(value => value === extensionImg) ){
+      
+      //extension est bonne
+      this.store
       .bills()
       .create({
         data: formData,
         headers: {
           noContentType: true
         }
-      })
-      .then(({fileUrl, key}) => {
-        console.log(fileUrl)
-        this.billId = key
-        this.fileUrl = fileUrl
-        this.fileName = fileName
-      }).catch(error => console.error(error))
+        })
+        .then(({fileUrl, key}) => {
+          console.log(fileUrl)
+          this.billId = key
+          this.fileUrl = fileUrl
+          this.fileName = fileName
+        }).catch(error => console.error(error))
+
+    } else{
+      //le fichier n'est pas au bon format, donc on clean l'input file
+      e.target.value = '';
+
+      const alertError = this.document.createElement('span');
+      alertError.id = 'errorFile';
+      alertError.textContent = "L'image doit être au format jpg, jpeg ou png";
+      alertError.style.color = 'red';
+
+      e.target.closest('div').appendChild(alertError);
+    }
+
+
   }
+
   handleSubmit = e => {
     e.preventDefault()
+
     console.log('e.target.querySelector(`input[data-testid="datepicker"]`).value', e.target.querySelector(`input[data-testid="datepicker"]`).value)
     const email = JSON.parse(localStorage.getItem("user")).email
     const bill = {
