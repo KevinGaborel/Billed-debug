@@ -18,13 +18,14 @@ export default class {
 
   handleClickNewBill = () => {
     this.onNavigate(ROUTES_PATH['NewBill'])
+
   }
 
   handleClickIconEye = (icon) => {
     const billUrl = icon.getAttribute("data-bill-url")
-    const imgWidth = Math.floor($('#modaleFile').width() * 0.5)
+    const imgWidth = Math.floor($('#modaleFile').width() * 0.5) //largeur de #modaleFile arrondie à l'inférieur * 0.5
     $('#modaleFile').find(".modal-body").html(`<div style='text-align: center;' class="bill-proof-container"><img width=${imgWidth} src=${billUrl} alt="Bill" /></div>`)
-    $('#modaleFile').modal('show')
+    $('#modaleFile').modal('show') //ajoute la classe 'show'
   }
 
   getBills = () => {
@@ -33,7 +34,6 @@ export default class {
       .bills()
       .list()
       .then(snapshot => {
-        //snapshot =  snapshot.sort((a, b) => Date.parse(a.date) + Date.parse(b.date));
         const bills = snapshot
           .map(doc => {
             try {
