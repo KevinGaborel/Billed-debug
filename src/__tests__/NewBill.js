@@ -10,6 +10,7 @@ import {localStorageMock} from "../__mocks__/localStorage.js";
 import mockStore from "../__mocks__/store"
 import NewBillUI from "../views/NewBillUI.js"
 import NewBill from "../containers/NewBill.js"
+import { post } from "jquery";
 
 
 function renderRouter(){
@@ -24,8 +25,8 @@ function renderRouter(){
   router();
 }
 
-
 describe("Given I am connected as an employee", () => { //Étant donné que je suis connecté en tant qu'employé
+  
   describe("When I am on NewBills Page", () => { //Quand je suis sur la page nouvelle Factures
     test("Then envelope icon in vertical layout should be highlighted", async () => { 
     //Alors, l'icône de l'enveloppe dans la disposition verticale doit être mise en surbrillance
@@ -92,6 +93,11 @@ describe("Given I am connected as an employee", () => { //Étant donné que je s
 
     describe("When the form is correctly completed and I submit it", () =>{ //Quand le formulaire est correctement rempli et que je le soummet
       test("Then a new bill is created" , async () => { //Alors une nouvelle facture est crée
+        Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+        window.localStorage.setItem('user', JSON.stringify({
+          type: 'Employee',
+          email: 'a@a'
+        }));
         
         const html = NewBillUI();
         document.body.innerHTML = html;
@@ -119,6 +125,66 @@ describe("Given I am connected as an employee", () => { //Étant donné que je s
       })
     }) 
 
+  })
+ 
+ // test d'intégration POST
+ describe("When I navigate to NewBill page", () => {
+   test("fetches bills from mock API POST", async () => {
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee',
+        email: 'a@a'
+      }));
+
+      document.body.innerHTML = NewBillUI();
+     
+      const onNavigate = (pathname) => {
+        document.body.innerHTML = ROUTES({ pathname });
+      };
+
+      const newBill = new NewBill({ //instance newbill
+        document,
+        onNavigate,
+        store: mockStore,
+        localStorage: window.localStorage,
+      })
+
+      const update = jest.fn(mockStore.bills().update);
+
+      const mockNewBill = {
+        "id": "47qAXb6fIm2zOKkLzMro",
+        "vat": "80",
+        "fileUrl": "https://firebasestorage.googleapis.com/v0/b/billable-677b6.a…f-1.jpg?alt=media&token=c1640e12-a24b-4b11-ae52-529112e9602a",
+        "status": "pending",
+        "type": "Hôtel et logement",
+        "commentary": "séminaire billed",
+        "name": "encore",
+        "fileName": "preview-facture-free-201801-pdf-1.jpg",
+        "date": "2004-04-04",
+        "amount": 400,
+        "commentAdmin": "ok",
+        "email": "a@a",
+        "pct": 20
+      }
+      
+      const updateBill = await update(mockNewBill);
+
+      const createBill = jest.fn(newBill.handleSubmit);
+
+      const form = screen.getByTestId('form-new-bill');
+      const btnSubmit = form.querySelector('#btn-send-bill');
+
+      form.addEventListener('submit', createBill);
+      
+      fireEvent.click(btnSubmit);
+      fireEvent.submit(form);
+
+      await waitFor(() => screen.getByText('Mes notes de frais'));
+
+      expect(createBill).toHaveBeenCalled();
+      expect(updateBill.id).toBe("47qAXb6fIm2zOKkLzMro");
+      expect(screen.getByText('Mes notes de frais')).toBeTruthy();
+    })
   })
 
 })
