@@ -40,6 +40,7 @@ describe("Given I am connected as an employee", () => { //Étant donné que je s
     })
 
     test("Then I am on newBillPage and the form is present", () => { //Alors je suis sur newBillPage et le formulaire est présent  
+
       renderRouter();
       window.onNavigate(ROUTES_PATH.NewBill);
 
@@ -179,12 +180,56 @@ describe("Given I am connected as an employee", () => { //Étant donné que je s
       fireEvent.click(btnSubmit);
       fireEvent.submit(form);
 
-      await waitFor(() => screen.getByText('Mes notes de frais'));
+      const title = await waitFor(() => screen.getByText('Mes notes de frais'));
 
       expect(createBill).toHaveBeenCalled();
       expect(updateBill.id).toBe("47qAXb6fIm2zOKkLzMro");
-      expect(screen.getByText('Mes notes de frais')).toBeTruthy();
+      expect(title).toBeTruthy();
     })
+
+  })
+
+  describe("When an error occurs on API", () => {
+    //"create an invoice with POST and fails with a 404 error" créer une facture avec POST et échoue avec une erreur 404
+    test("fetches error from an API and fails with 404 error", async () => {
+      jest.spyOn(mockStore, "bills");
+      renderRouter();
+
+      mockStore.bills.mockImplementationOnce(() => {
+        return {
+          update: () => {
+            return Promise.reject(new Error("Erreur 404"));
+          },
+        };
+      });
+
+      window.onNavigate(ROUTES_PATH.NewBill);
+
+      const formBill = screen.getByTestId("form-new-bill");
+      const handleSubmit = jest.fn(NewBill.handleSubmit);
+      formBill.addEventListener("submit", handleSubmit);
+      fireEvent.submit(formBill);
+    });
+
+    test("fetches error from an API and fails with 500 error", async () => {
+      jest.spyOn(mockStore, "bills");
+      renderRouter();
+
+      mockStore.bills.mockImplementationOnce(() => {
+        return {
+          update: () => {
+            return Promise.reject(new Error("Erreur 500"));
+          },
+        };
+      });
+
+      window.onNavigate(ROUTES_PATH.NewBill);
+      
+      const formBill = screen.getByTestId("form-new-bill");
+      const handleSubmit = jest.fn(NewBill.handleSubmit);
+      formBill.addEventListener("submit", handleSubmit);
+      fireEvent.submit(formBill);
+    });
   })
 
 })

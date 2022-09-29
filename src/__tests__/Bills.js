@@ -3,9 +3,10 @@
  */
 
 import {screen, waitFor} from "@testing-library/dom"
+import userEvent from '@testing-library/user-event'
 import BillsUI from "../views/BillsUI.js"
 import { bills } from "../fixtures/bills.js"
-import { ROUTES_PATH} from "../constants/routes.js";
+import { ROUTES_PATH, ROUTES} from "../constants/routes.js";
 import {localStorageMock} from "../__mocks__/localStorage.js";
 import Bills from "../containers/Bills.js"; //une classe
 import mockStore from "../__mocks__/store"
@@ -53,14 +54,24 @@ describe("Given I am connected as an employee", () => { //Étant donné que je s
       //Alors la fonction handleClickNewBill() est appelé, la route change 
 
       renderRouter();
-      window.onNavigate(ROUTES_PATH.Bills);
-      await waitFor(() => screen.getByTestId('btn-new-bill'));
-      const btnNewBill = screen.getByTestId('btn-new-bill');
+     
+      const onNavigate = (pathname) => {
+        document.body.innerHTML = ROUTES({ pathname });
+      };
 
-      const openNewBillPage = jest.fn(Bills.handleClickNewBill);
+      const bill = new Bills({ //instance
+        document,
+        onNavigate,
+        store: mockStore,
+        localStorage: window.localStorage,
+      })
+
+      const btnNewBill = await waitFor(() => screen.getByTestId('btn-new-bill'));
+      const openNewBillPage = jest.fn((e) => bill.handleClickNewBill(e));
+
       btnNewBill.addEventListener("click", openNewBillPage);
 
-      btnNewBill.click();
+      userEvent.click(btnNewBill);
 
       expect(openNewBillPage).toHaveBeenCalled(); // je vérifie que l'event est appelé
       expect(window.location.href).toBe("http://localhost/#employee/bill/new");
@@ -71,21 +82,35 @@ describe("Given I am connected as an employee", () => { //Étant donné que je s
   describe("When i click on eye button in the 'action' category", ()=> { // quand je clique sur le boutton oeil de la catégorie "action"
     test("Then, show the modal. ", async () => { 
       //Alors montre la modale. 
-
       $.fn.modal = jest.fn();
 
-      renderRouter();
-      window.onNavigate(ROUTES_PATH.Bills);
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      window.localStorage.setItem('user', JSON.stringify({
+        type: 'Employee',
+        email: 'a@a'
+      }));
 
-      await waitFor(() => screen.getAllByTestId('icon-eye')[0]);
-      const btnEyeShowModal = screen.getAllByTestId('icon-eye')[0];
-
-      const showModal = jest.fn(Bills.handleClickIconEye);
-
+      document.body.innerHTML = BillsUI({ data: bills });
+      
+      const onNavigate = (pathname) => {
+        document.body.innerHTML = ROUTES({ pathname });
+      };
+      
+      const bill = new Bills({ //instance
+        document,
+        onNavigate,
+        store: mockStore,
+        localStorage: window.localStorage,
+      })
+      
+      const btnEyeShowModal = await waitFor(() => screen.getAllByTestId('icon-eye')[0]);
+      expect(btnEyeShowModal).toBeTruthy(); 
+      
+      const showModal = jest.fn((e) => bill.handleClickIconEye(e));
       btnEyeShowModal.addEventListener('click', showModal(btnEyeShowModal));
-
+      
       btnEyeShowModal.click();
-
+      
       expect(showModal).toHaveBeenCalled();
       expect(screen.getByText("Justificatif")).toBeTruthy();
       expect(screen.queryByAltText("Bill")).toBeTruthy(); 
@@ -115,7 +140,6 @@ describe("Given I am connected as an employee", () => { //Étant donné que je s
 
       beforeEach(() => {
         jest.spyOn(mockStore, "bills");
-        //renderRouter();
       })
       test("fetches bills from an API and fails with 404 message error", async () => {
       
@@ -129,7 +153,6 @@ describe("Given I am connected as an employee", () => { //Étant donné que je s
         const html = BillsUI({ error: "Erreur 404" });
         document.body.innerHTML = html;
 
-        //await new Promise(process.nextTick);
         const message = screen.getByText(/Erreur 404/);
         expect(message).toBeTruthy();
 
@@ -144,7 +167,6 @@ describe("Given I am connected as an employee", () => { //Étant donné que je s
             }
           }})
         
-        //await new Promise(process.nextTick);
 
         const html = BillsUI({ error: "Erreur 500" });
         document.body.innerHTML = html;
@@ -157,5 +179,6 @@ describe("Given I am connected as an employee", () => { //Étant donné que je s
 
     })
   })
+  
 
 })
